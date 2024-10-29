@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #e0f2ff;
+            overflow: hidden;
+        }
+
+        /* Main Container */
+        .contact-container {
+            background-color: #ffffff;
+            width: 500px;
+            border-radius: 8px;
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideIn 1s ease-out;
+        }
+
+        /* Slide-in Animation */
+        @keyframes slideIn {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Header */
+        .contact-header {
+            background-color: #3b5998;
+            padding: 20px;
+            color: #ffffff;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        /* Contact Form */
+        .contact-form {
+            padding: 30px;
+        }
+
+        .contact-form input[type="text"],
+        .contact-form input[type="email"],
+        .contact-form textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .contact-form input[type="text"] { animation-delay: 0.2s; }
+        .contact-form input[type="email"] { animation-delay: 0.4s; }
+        .contact-form textarea { animation-delay: 0.6s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .contact-form textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .contact-form button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3b5998;
+            color: #ffffff;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: 0.8s;
+        }
+
+        .contact-form button:hover {
+            background-color: #2a4376;
+        }
+
+        /* Placeholder style */
+        .contact-form input::placeholder,
+        .contact-form textarea::placeholder {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        /* Illustration */
+        .illustration-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background-color: #e0f2ff;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .illustration-container .illustration {
+            width: 100px;
+            height: auto;
+            animation: scaleIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Floating Icons */
+        .floating-icon {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            opacity: 0.4;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .icon-phone {
+            top: 10px;
+            left: 20px;
+            animation-delay: 0.2s;
+        }
+
+        .icon-chat {
+            top: 20px;
+            right: 20px;
+            animation-delay: 0.5s;
+        }
+
+        .icon-email {
+            bottom: 10px;
+            left: 30px;
+            animation-delay: 0.8s;
+        }
+
+        /* Float Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="contact-container">
+        <div class="contact-header">
+            Contact Us
+        </div>
+        <div class="illustration-container">
+            <img src="https://via.placeholder.com/100x100.png?text=Illustration" alt="Illustration" class="illustration">
+            <!-- Floating icons for dynamic effect -->
+            <img src="https://via.placeholder.com/24x24.png?text=📞" alt="Phone Icon" class="floating-icon icon-phone">
+            <img src="https://via.placeholder.com/24x24.png?text=💬" alt="Chat Icon" class="floating-icon icon-chat">
+            <img src="https://via.placeholder.com/24x24.png?text=✉" alt="Email Icon" class="floating-icon icon-email">
+        </div>
+        <form class="contact-form" action="https://formspree.io/f/manyqzgw" method="POST">
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <textarea name="message" placeholder="Message" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
+
+    <script>
+        document.querySelector('.contact-form').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this),
+                headers: {
+                    'Accept': 'application/json'
+                }
+            }).then(response => {
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                    this.reset(); // Reset the form after sending
+                } else {
+                    alert('Failed to send message. Please try again later.');
+                }
+            }).catch(error => {
+                alert('Failed to send message: ' + error.message);
+            });
+        });
+    </script>
+</body>
+</html>
