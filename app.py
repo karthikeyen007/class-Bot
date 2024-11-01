@@ -3,8 +3,9 @@ import spacy
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple
 import random
+from statistics import mean
 
 app = Flask(__name__)
 nlp = spacy.load("en_core_web_sm")
@@ -21,10 +22,10 @@ pool = SimpleConnectionPool(1, 20, **DB_CONFIG)
 
 class MarksQueryProcessor:
     def __init__(self):
-        # Greetings and conversation patterns
+        # Enhanced greeting patterns
         self.greeting_patterns = [
             r"(?i)^(hi|hello|hey|greetings|good morning|good afternoon|good evening).*",
-            r"(?i)^(hi|hello|hey|greetings|good morning|good afternoon|good evening)\s+.*"
+            r"(?i).*\b(hi|hello|hey)\b.*"
         ]
         
         self.farewell_patterns = [
@@ -35,197 +36,406 @@ class MarksQueryProcessor:
         self.help_patterns = [
             r"(?i)^(what|how) can you (do|help).*",
             r"(?i)^help.*",
-            r"(?i).*\b(your purpose|you do|about you)\b.*",
-            r"(?i)^tell me about yourself.*"
-        ]
-        
-        # Greeting responses
-        self.greetings = [
-            "👋 Hello! I'm your student marks assistant. How can I help you today?",
-            "Hi there! 📚 Ready to help you with student marks information!",
-            "Hello! I'm here to help you check student marks. What would you like to know?",
-            "Greetings! 🎓 How may I assist you with student marks today?"
-        ]
-        
-        # Farewell responses
-        self.farewells = [
-            "Goodbye! Have a great day! 👋",
-            "See you later! Feel free to come back if you need more help! 😊",
-            "Bye! Take care! 👋",
-            "Farewell! Let me know if you need anything else! 🌟"
-        ]
-        
-        # Enhanced subject keywords with more variations
-        self.subject_keywords = {
-            "data visualization": ["data viz", "visualization", "dv", "dataviz", "data vis", "data visualization course", "viz"],
-            "computer architecture": ["ca", "architecture", "comp arch", "computer arch", "comp architecture", "computer organization"],
-            "dsa": ["data structures", "algorithms", "ds", "data structure", "dsa", "ds and algo", "data structures and algorithms"],
-            "java": ["java programming", "java lang", "java language", "core java", "java course", "java programming language"],
-            "dbms": ["database", "db", "database management", "database system", "db management", "database management system"],
-            "discrete maths": ["discrete mathematics", "discrete", "dm", "discrete math", "maths", "mathematics", "discrete math course"]
-        }
-        
-        # Marks query patterns
-        self.marks_patterns = [
-            (r"(?i)^(show|display|get|what are|tell me|fetch) (.+?)(?:'s)? marks$", self.get_all_marks),
-            (r"(?i)^marks of (.+?)$", self.get_all_marks),
-            (r"(?i)^(.+?)(?:'s)? marks$", self.get_all_marks),
-            (r"(?i)^what did (.+?) (get|score|obtain) in (.+?)$", self.get_subject_marks),
-            (r"(?i)^how (much|many|well) did (.+?) (score|get|obtain) in (.+?)$", self.get_subject_marks),
-            (r"(?i)^(.+?)(?:'s)? (.+?) marks$", self.get_subject_marks),
-            (r"(?i)^show me (.+?)(?:'s)? performance in (.+?)$", self.get_subject_marks),
-            (r"(?i)^what is (.+?)(?:'s)? score in (.+?)$", self.get_subject_marks),
-            (r"(?i)^check (.+?)(?:'s)? marks in (.+?)$", self.get_subject_marks)
+            r"(?i).*\b(help|assist|guide)\b.*"
         ]
 
+        # Enhanced patterns for subject-specific queries
+        self.subject_query_patterns = [
+            r"(?i)what (?:was|is|are) the (.+?) marks? (?:of|for) ([\w\d]+)",
+            r"(?i)show (.+?) marks? (?:of|for) ([\w\d]+)",
+            r"(?i)([\w\d]+)(?:'s)? (.+?) marks?",
+            r"(?i)get (.+?) marks? (?:of|for) ([\w\d]+)",
+            r"(?i)tell me (.+?) marks? (?:of|for) ([\w\d]+)"
+        ]
+
+        # Enhanced patterns for average marks queries
+        self.average_patterns = [
+            r"(?i)(?:what is|show|get|tell me) (?:the )?average (?:marks? )?(?:in|of|for) (.+)",
+            r"(?i)average (?:marks? )?(?:in|of|for) (.+)",
+            r"(?i)class average (?:in|of|for) (.+)"
+        ]
+
+        # Enhanced ranking patterns
+        self.ranking_patterns = [
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top) marks?(?: overall)?",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom) marks?(?: overall)?",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top) marks? in (.+?)\??",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom) marks? in (.+?)\??",
+            r"(?i)show (?:top|highest|best) performer(?: in (.+?))?",
+            r"(?i)show (?:lowest|worst) performer(?: in (.+?))?",
+            r"(?i)top scorer(?: in (.+?))?",
+            r"(?i)lowest scorer(?: in (.+?))?"
+        ]
+        
+        # Enhanced ID patterns
+        self.id_patterns = [
+            r"(?i)show marks for (?:student )?(?:id[ :]*)?([\w\d]+)",
+            r"(?i)get marks for (?:student )?(?:id[ :]*)?([\w\d]+)",
+            r"(?i)marks of (?:student )?(?:id[ :]*)?([\w\d]+)",
+            r"(?i)^(23cs\d{3})$",
+            r"(?i)(23cs\d{3})",
+            r"(?i)tell me about (23cs\d{3})",
+            r"(?i)show me (23cs\d{3}) marks"
+        ]
+        
+        self.subject_keywords = {
+            "data visualization": ["data viz", "visualization", "dv", "dataviz", "data vis"],
+            "computer architecture": ["ca", "architecture", "comp arch", "computer arch"],
+            "dsa": ["data structures", "algorithms", "ds", "data structure"],
+            "java": ["java programming", "java lang", "java language", "java"],
+            "dbms": ["database", "db", "database management"],
+            "discrete maths": ["discrete mathematics", "discrete", "dm", "discrete math"]
+        }
+
+        self.column_mapping = {
+            "data visualization": "data_visualization",
+            "computer architecture": "computer_architecture",
+            "dsa": "dsa",
+            "java": "java",
+            "dbms": "dbms",
+            "discrete maths": "discrete_maths"
+        }
+
+        self.greetings = [
+            "Hello! I'm your marks assistant. How can I help you today? 😊",
+            "Hi there! Ready to help you check academic performance! 📚",
+            "Greetings! What information would you like about student marks? 📊",
+            "Hello! Feel free to ask about any student's marks or performance! 🎓"
+        ]
+
+        self.farewells = [
+            "Goodbye! Feel free to come back if you need more information! 👋",
+            "See you later! Have a great day! 😊",
+            "Bye! Don't hesitate to ask if you need more help! 🌟"
+        ]
+
+    def _normalize_subject(self, subject: str) -> Optional[str]:
+        """Normalize subject name to match database column names."""
+        if not subject:
+            return None
+            
+        subject = subject.lower().strip()
+        
+        # Direct match
+        if subject in self.subject_keywords:
+            return subject
+            
+        # Check aliases
+        for main_subject, aliases in self.subject_keywords.items():
+            if subject in aliases or any(alias in subject for alias in aliases):
+                return main_subject
+                
+        return None
+
+    def _get_db_column_name(self, subject: str) -> str:
+        """Convert normalized subject name to database column name."""
+        return self.column_mapping.get(subject, subject.replace(" ", "_"))
+
+    def get_average_marks(self, subject: str) -> str:
+        """Get average marks for a specific subject."""
+        normalized_subject = self._normalize_subject(subject)
+        if not normalized_subject:
+            return f"❌ Sorry, I couldn't recognize the subject: {subject}"
+
+        conn = pool.getconn()
+        try:
+            with conn.cursor() as cursor:
+                column_name = self._get_db_column_name(normalized_subject)
+                cursor.execute(f"""
+                    SELECT AVG({column_name}), MIN({column_name}), MAX({column_name})
+                    FROM students
+                """)
+                avg, min_marks, max_marks = cursor.fetchone()
+                
+                return (f"📊 Statistics for {normalized_subject.title()}:\n"
+                       f"Class Average: {avg:.2f}\n"
+                       f"Highest Mark: {max_marks}\n"
+                       f"Lowest Mark: {min_marks}")
+        except Exception as e:
+            return f"❌ Error calculating average: {str(e)}"
+        finally:
+            pool.putconn(conn)
+
     def process_query(self, query: str) -> str:
+        """Process user query and return appropriate response."""
         query = query.strip()
         
         # Check for greetings
         for pattern in self.greeting_patterns:
             if re.match(pattern, query):
                 return random.choice(self.greetings)
-        
+
         # Check for farewells
         for pattern in self.farewell_patterns:
             if re.match(pattern, query):
                 return random.choice(self.farewells)
-        
-        # Check for help/about queries
+
+        # Check for help
         for pattern in self.help_patterns:
             if re.match(pattern, query):
                 return self.get_help_message()
-        
-        # Try marks query patterns
-        for pattern, handler in self.marks_patterns:
-            match = re.match(pattern, query)
+
+        # Check for average marks query
+        for pattern in self.average_patterns:
+            match = re.search(pattern, query)
             if match:
-                return handler(*match.groups())
-        
-        # Enhanced NLP processing for unmatched queries
-        doc = nlp(query)
-        
-        # Extract name using NER
-        for ent in doc.ents:
-            if ent.label_ == 'PERSON':
-                return self.get_all_marks(ent.text)
-        
-        # Fallback: look for capitalized words that might be names
-        words = [token.text for token in doc if token.is_alpha and token.is_title]
-        if words:
-            return self.get_all_marks(words[0])
-        
-        return "I couldn't understand your query. Try asking in these ways:\n" + \
-               "1. 'Show John's marks'\n" + \
-               "2. 'What did Mary get in Java?'\n" + \
-               "3. 'Show me Sarah's performance in DSA'\n" + \
-               "4. 'Marks of Tom'\n\n" + \
-               "Or type 'help' to learn more about what I can do!"
+                subject = match.group(1)
+                return self.get_average_marks(subject)
 
-    def get_help_message(self) -> str:
-        return """🤖 I'm your Student Marks Assistant!
+        # Check for subject-specific marks query
+        for pattern in self.subject_query_patterns:
+            match = re.search(pattern, query)
+            if match:
+                if len(match.groups()) == 2:
+                    subject = match.group(1)
+                    student_id = match.group(2)
+                    # Check if the groups are in correct order
+                    if re.match(r'23cs\d{3}', subject):
+                        student_id, subject = subject, student_id
+                    return self.get_subject_marks(student_id, subject)
 
-I can help you with:
-📊 Checking all marks for a student
-📚 Looking up marks for specific subjects
-📈 Viewing performance statistics
+        # Check for student ID marks query
+        for pattern in self.id_patterns:
+            match = re.search(pattern, query)
+            if match:
+                student_id = match.group(1)
+                return self.get_marks_by_id(student_id.lower())
 
-You can ask me things like:
-• "Show John's marks"
-• "What did Mary get in Java?"
-• "Show me Sarah's performance in DSA"
+        # Check for ranking queries
+        for pattern in self.ranking_patterns:
+            match = re.search(pattern, query)
+            if match:
+                subject = match.group(1) if match and len(match.groups()) >= 1 else None
+                if 'highest' in query.lower() or 'top' in query.lower() or 'best' in query.lower():
+                    return self.get_top_performer(subject)
+                elif 'lowest' in query.lower() or 'worst' in query.lower() or 'bottom' in query.lower():
+                    return self.get_bottom_performer(subject)
 
-Available subjects:
-""" + "\n".join(f"• {subject}" for subject in self.subject_keywords.keys()) + """
+        return ("I'm not sure I understand. Could you please rephrase your question? 🤔\n"
+                "You can ask about:\n"
+                "• Student marks (e.g., 'Show marks for 23cs098')\n"
+                "• Subject performance (e.g., 'What is the Java mark of 23cs098?')\n"
+                "• Class averages (e.g., 'What's the average in DSA?')\n"
+                "• Top performers (e.g., 'Who got the highest marks in Java?')")
 
-Just ask your question and I'll help you find the information you need! 😊"""
+    def get_subject_marks(self, student_id: str, subject: str) -> str:
+        """Get marks for a specific subject and student."""
+        normalized_subject = self._normalize_subject(subject)
+        if not normalized_subject:
+            return f"❌ Sorry, I couldn't recognize the subject: {subject}"
 
-    def get_all_marks(self, student_name: str, *args) -> str:
+        conn = pool.getconn()
+        try:
+            with conn.cursor() as cursor:
+                column_name = self._get_db_column_name(normalized_subject)
+                query = f"""
+                    SELECT id, name, {column_name}
+                    FROM students
+                    WHERE LOWER(id) = LOWER(%s)
+                """
+                cursor.execute(query, (student_id,))
+                result = cursor.fetchone()
+                
+                if not result:
+                    return f"📚 No records found for student ID: {student_id}"
+                
+                # Get class average for comparison
+                cursor.execute(f"SELECT AVG({column_name}) FROM students")
+                class_avg = cursor.fetchone()[0]
+                
+                performance = "above" if result[2] > class_avg else "below"
+                
+                return (f"📊 {normalized_subject.title()} marks for {result[1]} (ID: {result[0]}):\n"
+                       f"Marks: {result[2]}\n"
+                       f"Class Average: {class_avg:.2f}\n"
+                       f"Performance: {performance} class average")
+        except Exception as e:
+            return f"❌ Error retrieving marks: {str(e)}"
+        finally:
+            pool.putconn(conn)
+
+    def get_marks_by_id(self, student_id: str) -> str:
+        """Get all marks for a specific student."""
         conn = pool.getconn()
         try:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT name, data_visualization, computer_architecture, 
+                    SELECT id, name, data_visualization, computer_architecture, 
                            dsa, java, dbms, discrete_maths 
                     FROM students 
-                    WHERE LOWER(name) LIKE LOWER(%s)
-                """, (f"%{student_name.strip()}%",))
+                    WHERE LOWER(id) = LOWER(%s)
+                """, (student_id,))
                 result = cursor.fetchone()
                 
                 if not result:
-                    return f"📚 No records found for student: {student_name}"
+                    return f"📚 No records found for student ID: {student_id}"
                 
                 marks_dict = {
-                    "Data Visualization": result[1],
-                    "Computer Architecture": result[2],
-                    "DSA": result[3],
-                    "Java": result[4],
-                    "DBMS": result[5],
-                    "Discrete Maths": result[6]
+                    "Data Visualization": result[2],
+                    "Computer Architecture": result[3],
+                    "DSA": result[4],
+                    "Java": result[5],
+                    "DBMS": result[6],
+                    "Discrete Maths": result[7]
                 }
                 
                 # Calculate statistics
-                avg_marks = sum(marks_dict.values()) / len(marks_dict)
+                total_marks = sum(marks_dict.values())
+                avg_marks = total_marks / len(marks_dict)
                 highest_subject = max(marks_dict.items(), key=lambda x: x[1])
                 lowest_subject = min(marks_dict.items(), key=lambda x: x[1])
                 
-                # Format response
-                response = [f"📊 Marks Report for {result[0]}"]
-                response.append("-" * 40)
+                # Get class rank
+                cursor.execute("""
+                    SELECT COUNT(*) + 1 
+                    FROM students 
+                    WHERE (data_visualization + computer_architecture + 
+                           dsa + java + dbms + discrete_maths) > 
+                          (SELECT (data_visualization + computer_architecture + 
+                                  dsa + java + dbms + discrete_maths)
+                           FROM students 
+                           WHERE LOWER(id) = LOWER(%s))
+                """, (student_id,))
+                rank = cursor.fetchone()[0]
                 
+                response = [
+                    f"📊 Marks Report for {result[1]} (ID: {result[0]})",
+                    "-" * 40
+                ]
+                
+                # Add subject-wise marks
                 for subject, marks in marks_dict.items():
                     response.append(f"{subject:<20}: {marks:>3}")
                 
-                response.append("-" * 40)
-                response.append(f"📈 Average: {avg_marks:.1f}")
-                response.append(f"🏆 Highest: {highest_subject[0]} ({highest_subject[1]})")
-                response.append(f"📉 Lowest: {lowest_subject[0]} ({lowest_subject[1]})")
+                # Add summary statistics
+                response.extend([
+                    "-" * 40,
+                    f"📊 Total Marks: {total_marks}",
+                    f"📈 Average: {avg_marks:.1f}",
+                    f"🏆 Best Subject: {highest_subject[0]} ({highest_subject[1]})",
+                    f"📉 Needs Improvement: {lowest_subject[0]} ({lowest_subject[1]})",
+                    f"🎯 Class Rank: {rank}"
+                ])
                 
                 return "\n".join(response)
-                
+        except Exception as e:
+            return f"❌ Error retrieving marks: {str(e)}"
         finally:
             pool.putconn(conn)
 
-    def get_subject_marks(self, *args) -> str:
-        if len(args) >= 3:
-            student_name = args[1] if len(args) == 4 else args[0]
-            subject = args[-1]
-        else:
-            student_name, subject = args
-        
-        normalized_subject = self._normalize_subject(subject)
-        if not normalized_subject:
-            return f"❌ I couldn't recognize the subject '{subject}'. Available subjects are:\n" + \
-                   ", ".join(self.subject_keywords.keys())
-        
+    def get_top_performer(self, subject: Optional[str] = None) -> str:
+        """Get top performer overall or in a specific subject."""
         conn = pool.getconn()
         try:
             with conn.cursor() as cursor:
-                column_name = normalized_subject.replace(" ", "_")
-                query = """
-                    SELECT name, {column} 
-                    FROM students 
-                    WHERE LOWER(name) LIKE LOWER(%s)
-                """.format(column=column_name)
-                
-                cursor.execute(query, (f"%{student_name.strip()}%",))
-                result = cursor.fetchone()
-                
-                if not result:
-                    return f"📚 No records found for student: {student_name}"
-                
-                return f"📊 {result[0]}'s marks in {subject.title()}:\n" + \
-                       f"Marks: {result[1]}"
-                
+                if subject:
+                    normalized_subject = self._normalize_subject(subject)
+                    if not normalized_subject:
+                        return f"❌ Invalid subject: {subject}"
+                    
+                    column_name = self._get_db_column_name(normalized_subject)
+                    cursor.execute(f"""
+                        SELECT id, name, {column_name},
+                               RANK() OVER (ORDER BY {column_name} DESC) as rank
+                        FROM students
+                        ORDER BY {column_name} DESC
+                        LIMIT 3
+                    """)
+                    results = cursor.fetchall()
+                    response = [f"🏆 Top performers in {normalized_subject.title()}:"]
+                    for i, result in enumerate(results, 1):
+                        response.append(f"{i}. {result[1]} (ID: {result[0]}) - {result[2]} marks")
+                    return "\n".join(response)
+                else:
+                    cursor.execute("""
+                        SELECT id, name, 
+                               (data_visualization + computer_architecture + 
+                                dsa + java + dbms + discrete_maths) as total,
+                               RANK() OVER (ORDER BY 
+                                (data_visualization + computer_architecture + 
+                                 dsa + java + dbms + discrete_maths) DESC) as rank
+                        FROM students
+                        ORDER BY total DESC
+                        LIMIT 3
+                    """)
+                    results = cursor.fetchall()
+                    response = ["🏆 Overall top performers:"]
+                    for i, result in enumerate(results, 1):
+                        response.append(f"{i}. {result[1]} (ID: {result[0]}) - Total: {result[2]}")
+                    return "\n".join(response)
+        except Exception as e:
+            return f"❌ Error finding top performer: {str(e)}"
         finally:
             pool.putconn(conn)
 
-    def _normalize_subject(self, subject: str) -> Optional[str]:
-        subject = subject.lower().strip()
-        for main_subject, alternatives in self.subject_keywords.items():
-            if subject == main_subject or subject in alternatives:
-                return main_subject
-        return None
+    def get_bottom_performer(self, subject: Optional[str] = None) -> str:
+        """Get bottom performer overall or in a specific subject."""
+        conn = pool.getconn()
+        try:
+            with conn.cursor() as cursor:
+                if subject:
+                    normalized_subject = self._normalize_subject(subject)
+                    if not normalized_subject:
+                        return f"❌ Invalid subject: {subject}"
+                    
+                    column_name = self._get_db_column_name(normalized_subject)
+                    cursor.execute(f"""
+                        SELECT id, name, {column_name},
+                               RANK() OVER (ORDER BY {column_name}) as rank
+                        FROM students
+                        ORDER BY {column_name} ASC
+                        LIMIT 3
+                    """)
+                    results = cursor.fetchall()
+                    response = [f"📉 Students needing improvement in {normalized_subject.title()}:"]
+                    for i, result in enumerate(results, 1):
+                        response.append(f"{i}. {result[1]} (ID: {result[0]}) - {result[2]} marks")
+                    return "\n".join(response)
+                else:
+                    cursor.execute("""
+                        SELECT id, name, 
+                               (data_visualization + computer_architecture + 
+                                dsa + java + dbms + discrete_maths) as total,
+                               RANK() OVER (ORDER BY 
+                                (data_visualization + computer_architecture + 
+                                 dsa + java + dbms + discrete_maths)) as rank
+                        FROM students
+                        ORDER BY total ASC
+                        LIMIT 3
+                    """)
+                    results = cursor.fetchall()
+                    response = ["📉 Students needing overall improvement:"]
+                    for i, result in enumerate(results, 1):
+                        response.append(f"{i}. {result[1]} (ID: {result[0]}) - Total: {result[2]}")
+                    return "\n".join(response)
+        except Exception as e:
+            return f"❌ Error finding bottom performer: {str(e)}"
+        finally:
+            pool.putconn(conn)
+
+    def get_help_message(self) -> str:
+        """Get help message with available commands and examples."""
+        return """🤖 Welcome to Student Marks Assistant!
+
+I can help you with:
+📊 Individual student marks:
+  • "Show marks for 23cs098"
+  • "What are the marks of 23cs082"
+
+📚 Subject-specific marks:
+  • "What was the Java mark of 23cs098?"
+  • "Show DSA marks for 23cs082"
+
+📈 Performance analysis:
+  • "Who got the highest marks in Java?"
+  • "Show top performer overall"
+  • "Who got the lowest marks in DSA?"
+  • "What's the average in Computer Architecture?"
+
+Available subjects:
+""" + "\n".join(f"• {subject.title()}" for subject in self.subject_keywords.keys()) + """
+
+Just ask your question naturally and I'll help you find the information! 😊"""
 
 @app.route('/')
 def index():
