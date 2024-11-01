@@ -25,18 +25,24 @@ class MarksQueryProcessor:
         # Enhanced greeting patterns
         self.greeting_patterns = [
             r"(?i)^(hi|hello|hey|greetings|good morning|good afternoon|good evening).*",
-            r"(?i).*\b(hi|hello|hey)\b.*"
+            r"(?i).*\b(hi|hello|hey)\b.*",
+            r"(?i)^(yo|hiya|howdy|sup|what's up|whats up).*",
+            r"(?i).*\b(start|begin|let's start)\b.*"
         ]
         
         self.farewell_patterns = [
             r"(?i)^(bye|goodbye|see you|farewell|exit|quit|end).*",
-            r"(?i).*\b(bye|goodbye|see you|farewell)\b.*"
+            r"(?i).*\b(bye|goodbye|see you|farewell)\b.*",
+            r"(?i).*\b(thanks|thank you|done)\b.*\b(bye|goodbye|end)\b.*",
+            r"(?i)^(stop|close|finish).*"
         ]
         
         self.help_patterns = [
             r"(?i)^(what|how) can you (do|help).*",
             r"(?i)^help.*",
-            r"(?i).*\b(help|assist|guide)\b.*"
+            r"(?i).*\b(help|assist|guide)\b.*",
+            r"(?i).*\b(commands|options|features|abilities)\b.*",
+            r"(?i).*\b(how to|how do I|what should I)\b.*"
         ]
 
         # Enhanced patterns for subject-specific queries
@@ -45,26 +51,37 @@ class MarksQueryProcessor:
             r"(?i)show (.+?) marks? (?:of|for) ([\w\d]+)",
             r"(?i)([\w\d]+)(?:'s)? (.+?) marks?",
             r"(?i)get (.+?) marks? (?:of|for) ([\w\d]+)",
-            r"(?i)tell me (.+?) marks? (?:of|for) ([\w\d]+)"
+            r"(?i)tell me (.+?) marks? (?:of|for) ([\w\d]+)",
+            r"(?i)how (?:much|many) (?:did|has) ([\w\d]+) (?:get|score|achieve) in (.+?)",
+            r"(?i)what (?:did|has) ([\w\d]+) (?:get|score|achieve) in (.+?)",
+            r"(?i)display (.+?) marks? (?:of|for) ([\w\d]+)",
+            r"(?i)check (.+?) marks? (?:of|for) ([\w\d]+)"
         ]
 
         # Enhanced patterns for average marks queries
         self.average_patterns = [
             r"(?i)(?:what is|show|get|tell me) (?:the )?average (?:marks? )?(?:in|of|for) (.+)",
             r"(?i)average (?:marks? )?(?:in|of|for) (.+)",
-            r"(?i)class average (?:in|of|for) (.+)"
+            r"(?i)class average (?:in|of|for) (.+)",
+            r"(?i)how (?:is|was) the class (?:performance|doing) in (.+)",
+            r"(?i)what's the mean (?:score|marks?) (?:in|of|for) (.+)",
+            r"(?i)(?:show|display|tell) (?:me )?class (?:statistics|stats|performance) (?:for|in|of) (.+)"
         ]
 
         # Enhanced ranking patterns
         self.ranking_patterns = [
-            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top) marks?(?: overall)?",
-            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom) marks?(?: overall)?",
-            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top) marks? in (.+?)\??",
-            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom) marks? in (.+?)\??",
-            r"(?i)show (?:top|highest|best) performer(?: in (.+?))?",
-            r"(?i)show (?:lowest|worst) performer(?: in (.+?))?",
-            r"(?i)top scorer(?: in (.+?))?",
-            r"(?i)lowest scorer(?: in (.+?))?"
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top|best) marks?(?: overall)?",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom|worst) marks?(?: overall)?",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:highest|most|maximum|max|more|top|best) marks? in (.+?)\??",
+            r"(?i)who (?:got|scored|has|achieved) (?:the )?(?:lowest|least|minimum|min|less|bottom|worst) marks? in (.+?)\??",
+            r"(?i)show (?:top|highest|best) performer(?:s)?(?: in (.+?))?",
+            r"(?i)show (?:lowest|worst) performer(?:s)?(?: in (.+?))?",
+            r"(?i)top scorer(?:s)?(?: in (.+?))?",
+            r"(?i)lowest scorer(?:s)?(?: in (.+?))?",
+            r"(?i)who (?:is|are) (?:the )?(?:best|top|strongest) (?:student|performer)(?:s)?(?: in (.+?))?",
+            r"(?i)who (?:is|are) (?:the )?(?:weakest|poorest) (?:student|performer)(?:s)?(?: in (.+?))?",
+            r"(?i)display (?:top|best|highest) (\d+)? ?(?:student|performer)(?:s)?(?: in (.+?))?",
+            r"(?i)list (?:all )?(?:top|best|highest) (?:student|performer)(?:s)?(?: in (.+?))?"
         ]
         
         # Enhanced ID patterns
@@ -75,16 +92,21 @@ class MarksQueryProcessor:
             r"(?i)^(23cs\d{3})$",
             r"(?i)(23cs\d{3})",
             r"(?i)tell me about (23cs\d{3})",
-            r"(?i)show me (23cs\d{3}) marks"
+            r"(?i)show me (23cs\d{3}) marks",
+            r"(?i)how (?:is|was) (23cs\d{3}) (?:doing|performing)",
+            r"(?i)display (?:all )?marks for (23cs\d{3})",
+            r"(?i)check (?:status|performance) of (23cs\d{3})",
+            r"(?i)what are the marks of student (23cs\d{3})",
+            r"(?i)give me details about (23cs\d{3})"
         ]
         
         self.subject_keywords = {
-            "data visualization": ["data viz", "visualization", "dv", "dataviz", "data vis"],
-            "computer architecture": ["ca", "architecture", "comp arch", "computer arch"],
-            "dsa": ["data structures", "algorithms", "ds", "data structure"],
-            "java": ["java programming", "java lang", "java language", "java"],
-            "dbms": ["database", "db", "database management"],
-            "discrete maths": ["discrete mathematics", "discrete", "dm", "discrete math"]
+            "data visualization": ["data viz", "visualization", "dv", "dataviz", "data vis", "viz", "data visualization", "visualization course"],
+            "computer architecture": ["ca", "architecture", "comp arch", "computer arch", "comp architecture", "hardware arch", "system architecture"],
+            "dsa": ["data structures", "algorithms", "ds", "data structure", "ds and algo", "data structures and algorithms", "algo"],
+            "java": ["java programming", "java lang", "java language", "java", "core java", "advanced java", "java course"],
+            "dbms": ["database", "db", "database management", "database systems", "db management", "database course", "sql"],
+            "discrete maths": ["discrete mathematics", "discrete", "dm", "discrete math", "mathematics", "maths", "math"]
         }
 
         self.column_mapping = {
@@ -100,17 +122,25 @@ class MarksQueryProcessor:
             "Hello! I'm your marks assistant. How can I help you today? 😊",
             "Hi there! Ready to help you check academic performance! 📚",
             "Greetings! What information would you like about student marks? 📊",
-            "Hello! Feel free to ask about any student's marks or performance! 🎓"
+            "Hello! Feel free to ask about any student's marks or performance! 🎓",
+            "Hey! I'm here to help you with student performance analysis! 📈",
+            "Welcome! Ask me anything about student marks and performance! 🌟",
+            "Hi! Need help with academic records? I'm here to assist! 📝"
         ]
+
 
         self.farewells = [
             "Goodbye! Feel free to come back if you need more information! 👋",
             "See you later! Have a great day! 😊",
-            "Bye! Don't hesitate to ask if you need more help! 🌟"
+            "Bye! Don't hesitate to ask if you need more help! 🌟",
+            "Take care! Come back anytime for more assistance! 🎓",
+            "Farewell! Hope I was able to help! 📚",
+            "Goodbye! Happy learning! 🌈",
+            "See you soon! Stay curious! ⭐"
         ]
 
     def _normalize_subject(self, subject: str) -> Optional[str]:
-        """Normalize subject name to match database column names."""
+        """Enhanced subject normalization with fuzzy matching."""
         if not subject:
             return None
             
@@ -123,6 +153,11 @@ class MarksQueryProcessor:
         # Check aliases
         for main_subject, aliases in self.subject_keywords.items():
             if subject in aliases or any(alias in subject for alias in aliases):
+                return main_subject
+            
+        # Fuzzy matching for partial matches
+        for main_subject, aliases in self.subject_keywords.items():
+            if any(word in subject for word in main_subject.split()):
                 return main_subject
                 
         return None
