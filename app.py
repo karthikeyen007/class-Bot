@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash, session
 import spacy
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
@@ -6,10 +6,34 @@ import re
 from typing import Dict, Optional, List, Tuple
 import random
 from statistics import mean
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+import re
+from functools import wraps
+import urllib.parse
 
-app = Flask(__name__)
+
+# Encode the password properly
+password = urllib.parse.quote_plus("MADH@2006")  
+
 nlp = spacy.load("en_core_web_sm")
+app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Change this to a secure secret key
 
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{password}@localhost:5432/student_info"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+# User model for authentication
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
+
+# Connection pool for other database operations
 DB_CONFIG = {
     "database": "student_info",
     "user": "postgres",
@@ -472,19 +496,107 @@ Available subjects:
 
 Just ask your question naturally and I'll help you find the information! 😊"""
 
+# Login decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @app.route('/')
 def index():
+    return render_template('index.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contactus.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # Validate email domain
+        if not email.endswith('@kpriet.ac.in'):
+            flash('Please use your KPRIET email address')
+            return redirect(url_for('signup'))
+        
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered')
+            return redirect(url_for('signup'))
+        
+        # Create new user
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password)
+        )
+        
+        try:
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Registration successful! Please login.')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred. Please try again.')
+            return redirect(url_for('signup'))
+    
+    return render_template('signup.html')
+
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('chat_interface'))
+        
+        flash('Invalid email or password')
+        return redirect(url_for('login'))
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('index'))
+
+@app.route('/chat-interface')
+@login_required
+def chat_interface():
     return render_template('index7.html')
 
 @app.route('/chat', methods=['POST'])
+@login_required
 def chat():
     try:
         user_input = request.json['message']
-        processor = MarksQueryProcessor()
+        processor = MarksQueryProcessor()  # Your existing chat logic
         response = processor.process_query(user_input)
         return jsonify({'response': response})
     except Exception as e:
         return jsonify({'response': f"An error occurred: {str(e)}"})
+
+# @app._got_first_request
+# def create_tables():
+#     db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True)

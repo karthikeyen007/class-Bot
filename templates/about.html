@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - ClassBot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='aboutstyles.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+</head>
+<body>
+    <div class="navbar">
+        About us
+    </div>
+
+    <div class="container">
+        <section class="purpose-section">
+            <h2>Our Purpose:</h2>
+            <div class="purpose-content">
+                <img src="{{ url_for('static', filename='RoboImage.png') }}" alt="Purpose Icon" class="icon">
+                <p>ClassBot was created to provide instant access to student-related information, saving time and making life easier for students and faculty alike.</p>
+            </div>
+        </section>
+
+        <section class="how-it-works-section">
+            <h2>How It Works?</h2>
+            <div class="steps">
+                <div class="step">
+                    <h3>Step 1</h3>
+                    <p>Access the bot by logging in from homepage.</p>
+                </div>
+                <div class="step">
+                    <h3>Step 2</h3>
+                    <p>Ask questions about grades, marks, etc.</p>
+                </div>
+                <div class="step">
+                    <h3>Step 3</h3>
+                    <p>Get instant answers based on your data.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="future-updates-section">
+            <h2>Future Updates:</h2>
+            <div class="future-updates-content">
+                <img src="{{ url_for('static', filename='futureupdates.png') }}" alt="Updates Icon" class="icon">
+                <p>We're working on adding new features like enhanced AI responses, making it a mobile app. Stay tuned!</p>
+            </div>
+        </section>
+
+        <!-- Button to Contact Us Page -->
+        <div class="contact-button-container">
+            <a href="{{ url_for('contact') }}" class="contact-button">Contact Us</a>
+        </div>
+
+        <footer>
+            <p>Have ideas or feedback? Reach out to us at <a href="mailto:yourclassbot@gmail.com">yourclassbot@gmail.com</a></p>
+        </footer>
+    </div>
+
+    <style>
+        .contact-button-container {
+            text-align: center; /* Center the button */
+            margin: 20px 0; /* Add some spacing */
+        }
+
+        .contact-button {
+            padding: 10px 20px; /* Padding for the button */
+            background-color: #FF5722; /* Button color */
+            color: white; /* Text color */
+            text-decoration: none; /* Remove underline from the link */
+            border-radius: 5px; /* Rounded corners */
+            font-size: 16px; /* Font size */
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 173, 181, 0.4);
+        }
+
+        .contact-button:hover {
+            background-color: #303841; /* Darker shade on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 173, 181, 0.6);
+        }
+    </style>
+</body>
+</html>

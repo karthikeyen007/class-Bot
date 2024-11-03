@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassBot - Login</title>
+    <!-- Your existing style remains the same -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #EEEEEE;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            width: 100%;
+            background-color: #303841;
+            padding: 10px 10px;
+            text-align: center;
+            animation: slideInDown 0.8s ease-out;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .signup-container {
+            background-color: #303841;
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease;
+        }
+
+        h2 {
+            color: #EEEEEE;
+            text-align: center;
+            margin-bottom: 0px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #fff;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #393E46;
+            color: white;
+        }
+
+        .submit-btn {
+            background-color: #00ADB5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: #008a91;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #FF5722;
+            margin-top: 5px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #fff;
+        }
+
+        .login-link a {
+            color: #00ADB5;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            background-color: #303841;
+            color: #ece0ff;
+            text-align: center;
+            padding: 10px;
+            margin-top: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>ClassBot</h2>
+    </header>
+
+    <main>
+        <div class="signup-container">
+            <h2 style="color: #FF5722; margin-bottom: 30px;">Login</h2>
+            
+            <!-- Display Flask flash messages -->
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="error-message" style="display: block; margin-bottom: 15px; text-align: center;">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form id="loginForm" action="{{ url_for('login') }}" method="POST">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="error-message" id="emailError">Please enter a valid KPRIET email address</div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                    <div class="error-message" id="passwordError">Password is required</div>
+                </div>
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+            <div class="login-link">
+                Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 ClassBot. All rights reserved.</p>
+    </footer>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            let isValid = true;
+
+            // Reset error messages
+            document.querySelectorAll('.error-message').forEach(elem => {
+                if (!elem.hasAttribute('data-flash')) {
+                    elem.style.display = 'none';
+                }
+            });
+
+            // Email validation
+            if (!email) {
+                document.getElementById('emailError').textContent = 'Email is required';
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            } else if (!email.endsWith('@kpriet.ac.in')) {
+                document.getElementById('emailError').textContent = 'Please use your KPRIET email address';
+                document.getElementById('emailError').style.display = 'block';
+                isValid = false;
+            }
+
+            // Password validation
+            if (!password) {
+                document.getElementById('passwordError').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+
+        // Real-time email validation
+        document.getElementById('email').addEventListener('input', function() {
+            const emailError = document.getElementById('emailError');
+            if (this.value && !this.value.endsWith('@kpriet.ac.in')) {
+                emailError.textContent = 'Please use your KPRIET email address';
+                emailError.style.display = 'block';
+            } else {
+                emailError.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
