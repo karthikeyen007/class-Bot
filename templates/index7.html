@@ -3,228 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClassBot Chat</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>ClassBot - Chat Interface</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: Arial, sans-serif;
         }
 
         body {
+            font-family: Arial, sans-serif;
             background-color: #EEEEEE;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
-        /* Header styling matching homepage */
         header {
-            width: 100%;
             background-color: #303841;
-            padding: 10px 20px;
-            text-align: center;
-            animation: slideInDown 0.8s ease-out;
             color: white;
-        }
-        
-        /* Chat container styling */
-        .chat-container {
-            flex: 1;
-            max-width: 1200px;
-            margin: 20px auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
             display: flex;
-            flex-direction: column;
-            width: 95%;
-            position: relative;
-            overflow: hidden;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .chat-header {
-            background-color: #00ADB5;
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-buttons a {
             color: white;
-            padding: 15px;
-            text-align: center;
-            font-size: 1.5em;
-            font-weight: 600;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-buttons a:hover {
+            background-color: #00ADB5;
+        }
+
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         #chatbox {
-            flex: 1;
-            padding: 20px;
+            flex-grow: 1;
+            background-color: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
             overflow-y: auto;
-            background: #f8f9fa;
-            min-height: 300px;
+            min-height: 400px;
+            max-height: calc(100vh - 250px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .message {
-            margin: 10px 0;
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            border-radius: 10px;
             max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 15px;
-            position: relative;
-            animation: fadeIn 0.3s ease-in;
-            line-height: 1.4;
+            word-wrap: break-word;
         }
 
-        .user {
-            background: #00ADB5;
+        .message.user {
+            background-color: #00ADB5;
             color: white;
             margin-left: auto;
-            border-bottom-right-radius: 5px;
         }
 
-        .bot {
-            background: #303841;
+        .message.bot {
+            background-color: #303841;
             color: white;
-            margin-right: auto;
-            border-bottom-left-radius: 5px;
         }
 
         .input-container {
-            padding: 15px;
-            background: #393E46;
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 1rem;
+            margin-top: auto;
         }
 
         #userInput {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 25px;
+            flex-grow: 1;
+            padding: 1rem;
+            border: 2px solid #303841;
+            border-radius: 10px;
+            font-size: 1rem;
             outline: none;
-            font-size: 1em;
-            background: white;
-            color: #303841;
+            transition: border-color 0.3s;
         }
 
         #userInput:focus {
-            box-shadow: 0 0 0 2px #00ADB5;
+            border-color: #00ADB5;
         }
 
         #sendBtn {
-            background: #00ADB5;
+            padding: 1rem 2rem;
+            background-color: #00ADB5;
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 1em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         #sendBtn:hover {
-            background: #303841;
-            transform: translateY(-2px);
+            background-color: #008a91;
         }
 
         .typing-indicator {
-            padding: 12px 16px;
-            background: #393E46;
-            border-radius: 15px;
-            margin: 10px 0;
-            width: fit-content;
             display: none;
+            padding: 0.8rem;
+            border-radius: 10px;
+            background-color: #303841;
             color: white;
+            width: fit-content;
+            margin-bottom: 1rem;
         }
 
         .typing-indicator span {
+            display: inline-block;
             width: 8px;
             height: 8px;
-            background: white;
-            display: inline-block;
+            background-color: white;
             border-radius: 50%;
-            margin: 0 2px;
-            animation: bounce 1.3s linear infinite;
+            margin-right: 5px;
+            animation: typing 1s infinite;
         }
 
-        /* Animations */
-        @keyframes slideInDown {
-            from { transform: translateY(-100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        footer {
+            background-color: #303841;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
         }
 
-        @keyframes bounce {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-4px); }
+        .user-info {
+            color: white;
+            font-size: 0.9rem;
         }
 
-        /* Mobile Responsiveness */
+        .logout-btn {
+            background-color: #FF5722;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #f44336;
+        }
+
         @media (max-width: 768px) {
             .chat-container {
-                width: 98%;
-                margin: 10px auto;
-                height: calc(100vh - 140px);
+                padding: 0.5rem;
             }
 
             .message {
                 max-width: 90%;
             }
 
-            .input-container {
-                padding: 10px;
-            }
-
             #sendBtn {
-                padding: 12px 15px;
+                padding: 1rem;
             }
-
-            #sendBtn span {
-                display: none;
-            }
-        }
-
-        /* Footer */
-        footer {
-            background-color: #303841;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
     <header>
         <h2>ClassBot</h2>
+        <div class="nav-buttons">
+            <span class="user-info">Welcome, {{ session.get('username', 'User') }}</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
     </header>
 
     <div class="chat-container">
-        <div class="chat-header">
-            Chat with ClassBot
-        </div>
         <div id="chatbox">
-            <div class="message bot">
-                Hello! I'm ClassBot. Your student information assistant. How can I help you today?
-            </div>
+            <div class="message bot">Hello {{ session.get('username', 'there') }}! How can I help you today?</div>
             <div class="typing-indicator">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
         </div>
+        
         <div class="input-container">
-            <input type="text" id="userInput" placeholder="Type your message here...">
-            <button id="sendBtn">
-                <i class="fas fa-paper-plane"></i>
-                <span>Send</span>
-            </button>
+            <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+            <button id="sendBtn">Send</button>
         </div>
     </div>
 
@@ -237,6 +224,13 @@
         const userInput = document.getElementById("userInput");
         const sendBtn = document.getElementById("sendBtn");
         const typingIndicator = document.querySelector(".typing-indicator");
+
+        // Check if user is logged in
+        function checkLoginStatus() {
+            if (!{{ 'true' if session.get('user_id') else 'false' }}) {
+                window.location.href = "{{ url_for('login') }}";
+            }
+        }
 
         function showTypingIndicator() {
             typingIndicator.style.display = "block";
@@ -262,22 +256,30 @@
                 userInput.value = '';
                 showTypingIndicator();
 
-                // Simulate API call
-                fetch('/chat', {
+                fetch('{{ url_for("chat") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ message: message })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 401) {
+                        // Unauthorized - redirect to login
+                        window.location.href = "{{ url_for('login') }}";
+                        throw new Error('Unauthorized');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     hideTypingIndicator();
                     addMessage(data.response, false);
                 })
                 .catch(error => {
-                    hideTypingIndicator();
-                    addMessage("Sorry, I'm having trouble connecting. Please try again.", false);
+                    if (error.message !== 'Unauthorized') {
+                        hideTypingIndicator();
+                        addMessage("Sorry, I'm having trouble connecting. Please try again.", false);
+                    }
                 });
             }
         }
@@ -289,17 +291,18 @@
             }
         });
 
-        // Navigation
-        document.getElementById('homeBtn').addEventListener('click', function() {
-            window.location.href = 'index.html';
-        });
-
-        document.getElementById('aboutBtn').addEventListener('click', function() {
-            window.location.href = 'about.html';
-        });
+        // Check login status when page loads
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
 
         // Auto-focus input on page load
         userInput.focus();
+
+        // Prevent form submission on enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
     </script>
 </body>
 </html>

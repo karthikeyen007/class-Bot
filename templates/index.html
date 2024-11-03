@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassBot</title>
+    <style>
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+    
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #EEEEEE;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            animation: fadeIn 1s ease;
+        }
+    
+        /* Header */
+        header {
+            width: 100%;
+            background-color: #303841;
+            padding: 10px 20px;
+            text-align: center;
+            animation: slideInDown 0.8s ease-out;
+        }
+    
+        /* Header animation */
+        @keyframes slideInDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    
+        /* Nav buttons styled in a single pink box */
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 5px 15px;
+            background-color: #393E46;
+            border-radius: 5px;
+            width: fit-content;
+            margin-left: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+    
+        .nav-buttons:hover {
+            transform: scale(1.05);
+        }
+    
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    
+        /* Divider line between links */
+        .nav-divider {
+            color: white;
+        }
+    
+        /* Main Content */
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            animation: fadeIn 1.5s ease;
+        }
+    
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    
+        .content {
+            text-align: center;
+            max-width: 600px;
+        }
+    
+        h1 {
+            font-size: 3rem;
+            color: #FF5722;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: popIn 1.2s ease-out;
+        }
+    
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    
+        .tagline {
+            font-size: 1.2rem;
+            color: #303841;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            animation: fadeIn 1.6s ease;
+        }
+    
+        button {
+            background-color:#00ADB5;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 4px 8px rgba(0, 173, 181, 0.4);
+        }
+    
+        button:hover {
+            background-color: #303841;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 173, 181, 0.6);
+        }
+    
+        .robot-image {
+            width: 200px;
+            height: auto;
+            margin: 20px auto 10px;
+            display: block;
+            animation: fadeIn 1.8s ease;
+        }
+        /* Floating animation for robot */
+        .robot-image {
+            width: 200px;
+            height: auto;
+            margin: 20px auto 10px;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+            transition: transform 0.3s ease;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Bounce effect on hover */
+        .robot-image:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+    
+        /* Extended line below robot image */
+        .image-line {
+            width: 98%;
+            height: 2px;
+            background-color: #4b5563;
+            margin: 10px auto;
+        }
+    
+        /* All rights reserved text */
+        .reserved-text {
+            color: #4b5563;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 5px;
+        }
+    
+        /* Footer */
+        .footer-line {
+            width: 100%;
+            height: 2px;
+            background-color: #393E46;
+            margin-top: 20px;
+        }
+    
+        footer {
+            background-color: #303841;
+            color: #ece0ff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            animation: fadeInUp 1s ease;
+        }
+    
+        @keyframes fadeInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+    
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <h2>ClassBot</h2>
+    </header>
+
+    <!-- Nav Buttons in a Single Pink Box -->
+    <div class="nav-buttons">
+        <a href="{{ url_for('index') }}" id="homeBtn">Home</a>
+        <span class="nav-divider">|</span>
+        <a href="{{ url_for('about') }}" id="aboutBtn">About</a>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <div class="content">
+            <h1>CLASSBOT</h1>
+            <p class="tagline">All your College Info, Right at your Fingertips!</p>
+            <button id="getStartedBtn">Get Started</button>
+            <img src="{{ url_for('static', filename='RoboImageHome.png') }}" alt="ClassBot Robot" class="robot-image">
+            <div class="image-line"></div>
+        
+        </div>
+    </main>
+
+    <!-- Line and Footer Section -->
+    <div class="footer-line"></div>
+    <footer>
+        <p>&copy; 2024 ClassBot. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // JavaScript function for the Get Started button
+        document.getElementById('getStartedBtn').addEventListener('click', function() {
+            window.location.href = '{{ url_for("signup") }}';
+        });
+    
+        // JavaScript functions for Home and About buttons
+        // document.getElementById('homeBtn').addEventListener('click', function() {
+        //     window.location.href = 'index.html'; // Navigates to the home page
+        // });
+    
+        // document.getElementById('aboutBtn').addEventListener('click', function() {
+        //     window.location.href = 'about.html'; // Navigates to the About page
+        // });
+    </script>
+    
+</body>
+</html>
