@@ -19,7 +19,7 @@ import secrets
 
 
 # Encode the password properly
-password = urllib.parse.quote_plus("MADH@2006")  
+password = urllib.parse.quote_plus("password_of_database")  
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -37,7 +37,7 @@ app.config['SECRET_KEY'] = secrets.token_hex(32)
 with app.app_context():
     s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{password}@localhost:5432/student_info"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://postgres:{password}@localhost:5432/your_database_name"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -45,8 +45,8 @@ db = SQLAlchemy(app)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'  # e.g., 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'yourclassbot@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wypn ogdh dqdc waji'
+app.config['MAIL_USERNAME'] = 'yourmail@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your_password'
 
 mail = Mail(app)
 
@@ -60,9 +60,9 @@ class User(db.Model):
     is_verified = db.Column(db.Boolean, default=False)  # New field for email verification
 # Connection pool for other database operations
 DB_CONFIG = {
-    "database": "student_info",
-    "user": "postgres",
-    "password": "MADH@2006",
+    "database": "your_database_name",
+    "user": "your_username",
+    "password": "your_password",
     "host": "localhost",
     "port": "5432"
 }
@@ -594,7 +594,7 @@ def send_verification_email(user_email):
         token = s.dumps(user_email, salt='email-confirm')
         verify_url = url_for('verify_email', token=token, _external=True)
         
-        msg = Message('Verify Your Email', sender='yourclassbot@gmail.com', recipients=[user_email])
+        msg = Message('Verify Your Email', sender='yourmail@gmail.com', recipients=[user_email])
         msg.body = f"Hello! Please verify your email by clicking the link: {verify_url}"
         
         mail.send(msg)
