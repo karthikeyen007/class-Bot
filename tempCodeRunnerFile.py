@@ -19,7 +19,7 @@ import secrets
 
 
 # Encode the password properly
-password = urllib.parse.quote_plus("MADH@2006")  
+password = urllib.parse.quote_plus("KART@2006")  
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -62,7 +62,7 @@ class User(db.Model):
 DB_CONFIG = {
     "database": "student_info",
     "user": "postgres",
-    "password": "MADH@2006",
+    "password": "KART@2006",
     "host": "localhost",
     "port": "5432"
 }
