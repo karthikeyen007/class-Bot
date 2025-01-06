@@ -2,15 +2,13 @@ import cv2
 import time
 import imutils
 import numpy as np
-
-# Initialize camera and parameters
+s
 cam = cv2.VideoCapture(0)
 time.sleep(1)
 
 firstFrame = None
 area = 500
 
-# Dynamic background update factor
 alpha = 0.5
 
 while True:
